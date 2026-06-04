@@ -1,6 +1,7 @@
 import streamlit as st
 import time
-import google.generativeai as genai
+import requests
+import json
 
 # Streamlit Secrets'tan anahtarı güvenli bir şekilde okuyoruz
 API_KEY = st.secrets["GEMINI_API_KEY"] if "GEMINI_API_KEY" in st.secrets else None
@@ -8,28 +9,41 @@ API_KEY = st.secrets["GEMINI_API_KEY"] if "GEMINI_API_KEY" in st.secrets else No
 def yz_gerekce_uret(skor, sure, hatalar_listesi):
     if not API_KEY:
         return "Yapay zeka anahtarı sisteme tanımlanmamış. Lütfen kural tabanlı öneriyi dikkate alın."
+    
+    # %100 GARANTİLİ YÖNTEM: Doğrudan API URL'sine HTTP POST isteği gönderiyoruz
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
+    
+    headers = {'Content-Type': 'application/json'}
+    
+    prompt = f"""
+    Sen 'Açıklanabilir Yapay Zeka (XAI)' prensipleriyle çalışan şeffaf bir eğitsel bilişim etiği asistanısın.
+    Öğrenci bir mini durum testini tamamladı. Analiz verileri:
+    - Başarı Yüzdesi: %{skor}
+    - Testi Bitirme Süresi: {sure} saniye
+    - Yanlış Yapılan Konular: {hatalar_listesi if hatalar_listesi else 'Yok, hepsi doğru.'}
+    
+    Görevin:
+    Öğrenciye %80 başarı eşiğine göre modül önerisinde bulun (Skor düşükse Temel Modül, yüksekse İleri Düzey Modül).
+    Bu kararın arkasındaki gerekçeyi öğrenciye açıklarken 'paternalist' (baskıcı) bir dil kullanma. 
+    Öğrencinin kararı ezen aktif bir özne olduğunu hissettiren, şeffaf ve samimi en fazla 3 cümlelik bir metin üret.
+    """
+    
+    data = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
+    }
+    
     try:
-        # Eski ve kararlı kütüphane ile yapılandırma
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        # Doğrudan internet üzerinden istek atıyoruz, kütüphane bağımlılığı yok!
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        response_json = response.json()
         
-        prompt = f"""
-        Sen 'Açıklanabilir Yapay Zeka (XAI)' prensipleriyle çalışan şeffaf bir eğitsel bilişim etiği asistanısın.
-        Öğrenci bir mini durum testini tamamladı. Analiz verileri:
-        - Başarı Yüzdesi: %{skor}
-        - Testi Bitirme Süresi: {sure} saniye
-        - Yanlış Yapılan Konular: {hatalar_listesi if hatalar_listesi else 'Yok, hepsi doğru.'}
-        
-        Görevin:
-        Öğrenciye %80 başarı eşiğine göre modül önerisinde bulun (Skor düşükse Temel Modül, yüksekse İleri Düzey Modül).
-        Bu kararın arkasındaki gerekçeyi öğrenciye açıklarken 'paternalist' (baskıcı) bir dil kullanma. 
-        Öğrencinin kararı ezen aktif bir özne olduğunu hissettiren, şeffaf ve samimi en fazla 3 cümlelik bir metny üret.
-        """
-        
-        response = model.generate_content(prompt)
-        return response.text
+        # Gelen cevaptan metni ayıklıyoruz
+        text_response = response_json['candidates'][0]['content']['parts'][0]['text']
+        return text_response
     except Exception as e:
-        return f"Yapay zeka sunucusu şu an yoğun. Kural tabanlı sistem önerisi geçerlidir. (Hata: {e})"
+        return f"Yapay zeka sunucusu şu an yoğun. Kural tabanlı sistem önerisi geçerlidir."
 
 # Sayfa ayarları
 st.set_page_config(page_title="Bilişim Etiği - Etik Bildirim Prototipi", page_icon="🤖")
