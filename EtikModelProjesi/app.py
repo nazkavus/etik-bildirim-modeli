@@ -3,7 +3,7 @@ import time
 from google import genai
 
 # !!! BURAYA GOOGLE AI STUDIO'DAN ALDIĞIN API ANAHTARINI YAPIŞTIR !!!
-API_KEY = "AQ.Ab8RN6Lp3JkZuKOsNnsDlXPD4WvGeKodWxNI7Udot4pxl2Rz_A"
+API_KEY = "AQ.Ab8RN6KyefGN3q9iw5V0CVr2Km9YRvs_wrO9_UxlIxImkPbZfQ"
 
 # Yapay Zeka İstemcisini Başlatma
 def yz_gerekce_uret(skor, sure, hatalar):
