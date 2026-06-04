@@ -2,27 +2,26 @@ import streamlit as st
 import time
 from google import genai
 
-# !!! BURAYA GOOGLE AI STUDIO'DAN ALDIĞIN API ANAHTARINI YAPIŞTIR !!!
-API_KEY = "AQ.Ab8RN6IZ0EEngeyjWJzp0wqUTf2-RDeSGdaT0kYFVW6X1l4Bug"
+# GÜVENLİK GÜNCELLEMESİ: Anahtar kodun içinden kaldırıldı, Streamlit Secrets'tan okunacak.
+API_KEY = st.secrets["GEMINI_API_KEY"] if "GEMINI_API_KEY" in st.secrets else None
 
-# Yapay Zeka İstemcisini Başlatma
-def yz_gerekce_uret(skor, sure, hatalar):
+def yz_gerekce_uret(skor, sure, hatalar_listesi):
+    if not API_KEY:
+        return "Yapay zeka anahtarı sisteme tanımlanmamış. Lütfen kural tabanlı öneriyi dikkate alın."
     try:
         client = genai.Client(api_key=API_KEY)
         
-        # YZ'ye projemizin etik ilkelerini ve öğrenci verilerini içeren bir Prompt hazırlıyoruz
         prompt = f"""
-        Sen 'Açıklanabilir Yapay Zeka (XAI)' ve 'Etik Bildirim ve Onay Modeli' prensipleriyle çalışan şeffaf bir eğitsel asistansın.
-        Bir öğrenci Bilişim Etiği testini tamamladı. Verileri aşağıdadır:
-        - Başarı Skoru: %{skor}
+        Sen 'Açıklanabilir Yapay Zeka (XAI)' prensipleriyle çalışan şeffaf bir eğitsel bilişim etiği asistanısın.
+        Öğrenci bir mini durum testini tamamladı. Analiz verileri:
+        - Başarı Yüzdesi: %{skor}
         - Testi Bitirme Süresi: {sure} saniye
-        - Yapılan Hatalar: {hatalar if hatalar else 'Hata yok, tam puan.'}
+        - Yanlış Yapılan Konular: {hatalar_listesi if hatalar_listesi else 'Yok, hepsi doğru.'}
         
         Görevin:
-        Öğrenciye %80 başarı eşiğine göre bir seviye önerisinde bulun (Skor düşükse Temel Seviye, yüksekse İleri Seviye).
-        En önemlisi, bu önerinin arkasındaki ALGORİTMİK GEREKÇEYİ (XAI) öğrenciye açıkla. 
-        Metni yazarken 'paternalist' (otoriter/baskıcı) bir dil kullanma. Öğrencinin bir 'karar verici özne' olduğunu unutma.
-        Gerekçeyi doğrudan öğrenciye hitap ederek (en fazla 3-4 cümleyle) samimi ve akademik bir dille yaz.
+        Öğrenciye %80 başarı eşiğine göre modül önerisinde bulun (Skor düşükse Temel Modül, yüksekse İleri Düzey Modül).
+        Bu kararın arkasındaki gerekçeyi öğrenciye açıklarken 'paternalist' (baskıcı) bir dil kullanma. 
+        Öğrencinin kararı ezen aktif bir özne olduğunu hissettiren, şeffaf ve samimi 3 cümlelik bir metin üret.
         """
         
         response = client.models.generate_content(
@@ -31,21 +30,20 @@ def yz_gerekce_uret(skor, sure, hatalar):
         )
         return response.text
     except Exception as e:
-        return f"Yapay zeka bağlantısında bir pürüz oluştu, ancak kural tabanlı öneri geçerlidir. (Hata: {e})"
+        return f"Yapay zeka sunucusu şu an yoğun. Kural tabanlı sistem önerisi geçerlidir. (Hata: {e})"
 
-# Sayfa ayarları ve başlık
-st.set_page_config(page_title="Bilişim Etiği - Canlı YZ Destekli Etik Bildirim", page_icon="🤖")
-st.title("YZ Destekli Etik Bildirim ve Onay Modeli")
+# Sayfa ayarları
+st.set_page_config(page_title="Bilişim Etiği - Etik Bildirim Prototipi", page_icon="🤖")
+st.title("🤖 Gerçek YZ Destekli Etik Bildirim ve Onay Modeli")
 st.write("Bu simülasyon, arka planda canlı Gemini API kullanarak gerekçelerini 'Açıklanabilir YZ (XAI)' ile üretir.")
 
-# Oturum hafızasını başlatalım
 if "test_bitti" not in st.session_state:
     st.session_state.test_bitti = False
     st.session_state.baslama_zamani = time.time()
 
-# 10.1: MİNİ TEST ARABİRİMİ
+# 10.1: KULLANICI ETKİLEŞİMİ
 if not st.session_state.test_bitti:
-    st.subheader("Bilişim Etiği Mini Tanılama Testi")
+    st.subheader("📝 Bilişim Etiği Mini Tanılama Testi")
     
     soru_1 = st.radio(
         "1. Bir yazılımcının, açık kaynak kodlu bir projeyi kaynak göstermeden ticari bir üründe doğrudan kullanması hangi etik ihlale girer?",
@@ -65,30 +63,31 @@ if not st.session_state.test_bitti:
             st.session_state.bitis_zamani = time.time()
             st.session_state.toplam_sure = round(st.session_state.bitis_zamani - st.session_state.baslama_zamani, 1)
             
+            # Hata tespiti (Metin eşleşme pürüzleri tamamen giderildi)
             hatalar = []
             skor = 0
-            if soru_1 == "Fikri Mülkiyet ve İntihal": skor += 33.3
-            else: hatalar.append("Fikri Mülkiyet Sorusu (Yanlış)")
+            
+            if "Fikri Mülkiyet" in soru_1: skor += 33.3
+            else: hatalar.append("Fikri Mülkiyet (Eksik)")
                 
-            if soru_2 == "Gizlilik ve Veri Mahremiyeti": skor += 33.3
-            else: hatalar.append("Veri Mahremiyeti Sorusu (Yanlış)")
+            if "Gizlilik" in soru_2: skor += 33.3
+            else: hatalar.append("Veri Mahremiyeti (Eksik)")
                 
-            if soru_3 == "Kara Kutu (Black Box) Problemi": skor += 33.4
-            else: hatalar.append("Kara Kutu Sorusu (Yanlış)")
+            if "Kara Kutu" in soru_3: skor += 33.4
+            else: hatalar.append("Kara Kutu Problemi (Eksik)")
             
             st.session_state.skor = round(skor, 1)
             st.session_state.hatalar_metni = ", ".join(hatalar)
             
-            # İŞTE BURASI SİHİRLİ NOKTA: Canlı YZ'yi çağırıp gerekçeyi ürettiriyoruz
-            with st.spinner("Yapay Zeka metaverilerinizi analiz ediyor ve etik bildirim hazırlıyor..."):
+            with st.spinner("Yapay Zeka verilerinizi analiz ediyor..."):
                 st.session_state.yz_gerekcesi = yz_gerekce_uret(st.session_state.skor, st.session_state.toplam_sure, st.session_state.hatalar_metni)
             
             st.session_state.test_bitti = True
             st.rerun()
         else:
-            st.warning("Lütfen tüm soruları cevaplayın!")
+            st.warning("Lütfen sınıfta hata oluşmaması için tüm soruları cevaplayın!")
 
-# RESULTS & AX CONTROL AREA
+# SONUÇ EKRANI
 if st.session_state.test_bitti:
     st.success("🎉 Değerlendirme tamamlandı!")
     
@@ -102,12 +101,11 @@ if st.session_state.test_bitti:
     st.markdown("---")
     st.subheader("🤖 Gerçek Zamanlı Üretilen YZ Etik Bildirim Paneli")
     
-    # Sabit metin yerine yukarıda Gemini'ın ürettiği dinamik açıklamayı basıyoruz!
     onerilen_seviye = "Bilişim Etiği: Temel Modül" if st.session_state.skor <= 66 else "Bilişim Etiği: İleri Düzey Modül"
-    st.info(f"**Sistem Önerisi:** {onerilen_seviye}\n\n**Gemini API Tarafından Üretilen Canlı Gerekçe (XAI):**\n\n{st.session_state.yz_gerekcesi}")
+    st.info(f"**Sistem Önerisi:** {onerilen_seviye}\n\n**Canlı Gerekçe (XAI):**\n\n{st.session_state.yz_gerekcesi}")
 
     st.markdown("---")
-    st.subheader("Özerklik Kontrol Alanı")
+    st.subheader("🔑 10.4 Özerklik Kontrol Alanı")
     
     if "secim_yapildi" not in st.session_state:
         st.session_state.secim_yapildi = False
@@ -128,7 +126,7 @@ if st.session_state.test_bitti:
 
     if st.session_state.secim_yapildi:
         if st.session_state.kullanici_karari == "Kabul":
-            st.success(f"🎯 **Kararınız:** Algoritma önerisini kabul ettiniz. Rızanızla yönlendiriliyorsunuz.")
+            st.success(f"🎯 **Kararınız:** Algoritma önerisini kabul ettiniz. Rızanız doğrultusunda içerikler yükleniyor.")
         elif st.session_state.kullanici_karari == "İtiraz":
             st.warning("⚠️ **Kararınız:** Paternalizmi reddettiniz ve kontrolü elinize aldınız!")
             secilen_manuel_seviye = st.selectbox(
