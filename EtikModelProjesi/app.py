@@ -1,15 +1,17 @@
 import streamlit as st
 import time
-from google import genai
+import google.generativeai as genai
 
-# GÜVENLİK GÜNCELLEMESİ: Anahtar kodun içinden kaldırıldı, Streamlit Secrets'tan okunacak.
+# Streamlit Secrets'tan anahtarı güvenli bir şekilde okuyoruz
 API_KEY = st.secrets["GEMINI_API_KEY"] if "GEMINI_API_KEY" in st.secrets else None
 
 def yz_gerekce_uret(skor, sure, hatalar_listesi):
     if not API_KEY:
         return "Yapay zeka anahtarı sisteme tanımlanmamış. Lütfen kural tabanlı öneriyi dikkate alın."
     try:
-        client = genai.Client(api_key=API_KEY)
+        # Eski ve kararlı kütüphane ile yapılandırma
+        genai.configure(api_key=API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""
         Sen 'Açıklanabilir Yapay Zeka (XAI)' prensipleriyle çalışan şeffaf bir eğitsel bilişim etiği asistanısın.
@@ -21,13 +23,10 @@ def yz_gerekce_uret(skor, sure, hatalar_listesi):
         Görevin:
         Öğrenciye %80 başarı eşiğine göre modül önerisinde bulun (Skor düşükse Temel Modül, yüksekse İleri Düzey Modül).
         Bu kararın arkasındaki gerekçeyi öğrenciye açıklarken 'paternalist' (baskıcı) bir dil kullanma. 
-        Öğrencinin kararı ezen aktif bir özne olduğunu hissettiren, şeffaf ve samimi 3 cümlelik bir metin üret.
+        Öğrencinin kararı ezen aktif bir özne olduğunu hissettiren, şeffaf ve samimi en fazla 3 cümlelik bir metny üret.
         """
         
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
+        response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"Yapay zeka sunucusu şu an yoğun. Kural tabanlı sistem önerisi geçerlidir. (Hata: {e})"
@@ -63,7 +62,6 @@ if not st.session_state.test_bitti:
             st.session_state.bitis_zamani = time.time()
             st.session_state.toplam_sure = round(st.session_state.bitis_zamani - st.session_state.baslama_zamani, 1)
             
-            # Hata tespiti (Metin eşleşme pürüzleri tamamen giderildi)
             hatalar = []
             skor = 0
             
