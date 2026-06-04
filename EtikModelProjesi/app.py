@@ -107,7 +107,7 @@ if st.session_state.test_bitti:
     st.info(f"**Sistem Önerisi:** {onerilen_seviye}\n\n**Gemini API Tarafından Üretilen Canlı Gerekçe (XAI):**\n\n{st.session_state.yz_gerekcesi}")
 
     st.markdown("---")
-    st.subheader("10.4 Özerklik Kontrol Alanı")
+    st.subheader("Özerklik Kontrol Alanı")
     
     if "secim_yapildi" not in st.session_state:
         st.session_state.secim_yapildi = False
