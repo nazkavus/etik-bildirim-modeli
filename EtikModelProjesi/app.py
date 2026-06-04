@@ -47,7 +47,7 @@ def yz_gerekce_uret(skor, sure, hatalar_listesi):
 
 # Sayfa ayarları
 st.set_page_config(page_title="Bilişim Etiği - Etik Bildirim Prototipi", page_icon="🤖")
-st.title("🤖 Gerçek YZ Destekli Etik Bildirim ve Onay Modeli")
+st.title("YZ Destekli Etik Bildirim ve Onay Modeli")
 st.write("Bu simülasyon, arka planda canlı Gemini API kullanarak gerekçelerini 'Açıklanabilir YZ (XAI)' ile üretir.")
 
 if "test_bitti" not in st.session_state:
@@ -56,7 +56,7 @@ if "test_bitti" not in st.session_state:
 
 # 10.1: KULLANICI ETKİLEŞİMİ
 if not st.session_state.test_bitti:
-    st.subheader("📝 Bilişim Etiği Mini Tanılama Testi")
+    st.subheader("Bilişim Etiği Mini Tanılama Testi")
     
     soru_1 = st.radio(
         "1. Bir yazılımcının, açık kaynak kodlu bir projeyi kaynak göstermeden ticari bir üründe doğrudan kullanması hangi etik ihlale girer?",
@@ -117,7 +117,7 @@ if st.session_state.test_bitti:
     st.info(f"**Sistem Önerisi:** {onerilen_seviye}\n\n**Canlı Gerekçe (XAI):**\n\n{st.session_state.yz_gerekcesi}")
 
     st.markdown("---")
-    st.subheader("🔑 10.4 Özerklik Kontrol Alanı")
+    st.subheader("🔑 Özerklik Kontrol Alanı")
     
     if "secim_yapildi" not in st.session_state:
         st.session_state.secim_yapildi = False
