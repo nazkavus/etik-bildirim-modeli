@@ -11,7 +11,7 @@ def yz_gerekce_uret(skor, sure, hatalar_listesi):
     try:
         # Eski ve kararlı kütüphane ile yapılandırma
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
         
         prompt = f"""
         Sen 'Açıklanabilir Yapay Zeka (XAI)' prensipleriyle çalışan şeffaf bir eğitsel bilişim etiği asistanısın.
